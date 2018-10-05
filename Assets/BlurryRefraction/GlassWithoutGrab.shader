@@ -1,4 +1,4 @@
-﻿Shader "Custom/SimpleShaderTemplate"
+﻿Shader "ExtendingLWRP/Stained BumpDistort LWRP (no grab)"
 {
 	Properties
 	{
