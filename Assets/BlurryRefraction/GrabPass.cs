@@ -9,9 +9,7 @@ using UnityEngine.Rendering;
 public class GrabPass : MonoBehaviour, IAfterSkyboxPass
 {
     public Shader m_BlurShader;
-
     private GrabPassImpl m_grabPass;
-
 
     public ScriptableRenderPass GetPassToEnqueue(RenderTextureDescriptor baseDescriptor, RenderTargetHandle colorHandle, RenderTargetHandle depthHandle)
     {
@@ -31,7 +29,6 @@ public class GrabPassImpl : ScriptableRenderPass
 
     public GrabPassImpl(Shader blurShader, RenderTargetHandle colorHandle)
     {
-        RegisterShaderPassName("GrabPass");
         m_BlurShader = blurShader;
         m_ColorHandle = colorHandle;
     }
