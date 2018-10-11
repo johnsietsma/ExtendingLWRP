@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 Shader "Hidden/SeparableGlassBlur" {
 	Properties {
 		_MainTex ("Base (RGB)", 2D) = "" {}
@@ -37,7 +35,6 @@ Shader "Hidden/SeparableGlassBlur" {
 	
 	half4 frag (v2f i) : COLOR {
 		half4 color = float4 (0,0,0,0);
-
 		color += 0.40 * tex2D (_MainTex, i.uv);
 		color += 0.15 * tex2D (_MainTex, i.uv01.xy);
 		color += 0.15 * tex2D (_MainTex, i.uv01.zw);

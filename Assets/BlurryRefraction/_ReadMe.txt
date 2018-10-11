@@ -1,4 +1,7 @@
-﻿This scene shows a very basic "blurry refraction" technique using
+﻿This is port of the original blurry refractions sample. Below is the original readme.
+---
+
+This scene shows a very basic "blurry refraction" technique using
 command buffers.
 
 The idea is: after opaque objects & skybox is rendered, copy the image

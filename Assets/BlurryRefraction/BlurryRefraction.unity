@@ -125,7 +125,7 @@ GameObject:
   - component: {fileID: 1321220}
   - component: {fileID: 1321219}
   m_Layer: 0
-  m_Name: SceneCapsule
+  m_Name: BlueCapsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -217,7 +217,7 @@ GameObject:
   - component: {fileID: 324488662}
   - component: {fileID: 324488661}
   m_Layer: 0
-  m_Name: SceneCapsule
+  m_Name: GreenCapsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -335,7 +335,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab52c035ee9a3454d81ed21ec7561751, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_BlurShader: {fileID: 4800000, guid: 599a6706848d54f169df9e37fcb67574, type: 3}
 --- !u!20 &580160653
 Camera:
   m_ObjectHideFlags: 0
@@ -657,7 +656,7 @@ GameObject:
   - component: {fileID: 1859404405}
   - component: {fileID: 1859404404}
   m_Layer: 0
-  m_Name: SceneCapsule
+  m_Name: RedCapsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

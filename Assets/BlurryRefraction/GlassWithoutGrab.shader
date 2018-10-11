@@ -59,7 +59,6 @@
 			Varyings vert(Attributes input)
 			{
 				Varyings output = (Varyings)0;
-
 				VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 				output.vertex = vertexInput.positionCS;
 
