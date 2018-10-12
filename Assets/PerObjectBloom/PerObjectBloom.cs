@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using CoreUtils = UnityEngine.Experimental.Rendering.CoreUtils;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -33,8 +34,8 @@ public sealed class PerObjectBloomRenderer : PostProcessEffectRenderer<PerObject
         m_BlurTemp1 = Shader.PropertyToID("_Temp1");
         m_BlurTemp2 = Shader.PropertyToID("_Temp2");
 
-        m_MaskedBrightnessBlit = new Material(Shader.Find(k_MaskedBightnessBlitShader));
-        m_AdditiveBlit = new Material(Shader.Find(k_AdditiveBlitShader));
+        m_MaskedBrightnessBlit = CoreUtils.CreateEngineMaterial(k_MaskedBightnessBlitShader);
+        m_AdditiveBlit = CoreUtils.CreateEngineMaterial(k_AdditiveBlitShader);
     }
 
     public override void Render(PostProcessRenderContext context)

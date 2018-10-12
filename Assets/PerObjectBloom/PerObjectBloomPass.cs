@@ -38,7 +38,7 @@ public class PerObjectBloomPassImpl : ScriptableRenderPass
         m_baseDescriptor = baseDescriptor;
 
         // This just writes black values for anything that is rendered
-        m_brightnessMaskMaterial = new Material(Shader.Find("Hidden/Internal-StencilWrite"));
+        m_brightnessMaskMaterial = CoreUtils.CreateEngineMaterial("Hidden/Internal-StencilWrite");
 
         // Setup a target RT handle (it just wraps the int id)
         m_PerObjectRenderTextureHandle = new RenderTargetHandle();

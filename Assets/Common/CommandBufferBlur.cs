@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 
 // Set up a CommandBuffer to do a blur
@@ -10,7 +9,7 @@ public class CommandBufferBlur
 
     public CommandBufferBlur()
     {
-        m_Material = new Material(Shader.Find("Hidden/SeparableGlassBlur"));
+        m_Material = CoreUtils.CreateEngineMaterial("Hidden/SeparableGlassBlur");
         m_Material.hideFlags = HideFlags.HideAndDontSave;
     }
 

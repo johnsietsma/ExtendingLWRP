@@ -118,4 +118,4 @@ MonoBehaviour:
     value: 0.544
   bloomAmount:
     overrideState: 1
-    value: 0.52
+    value: 1.1
