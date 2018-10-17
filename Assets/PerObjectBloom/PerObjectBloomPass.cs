@@ -58,7 +58,6 @@ public class PerObjectBloomPassImpl : ScriptableRenderPass
         CommandBuffer cmd = CommandBufferPool.Get(k_PerObjectBloomTag);
         using (new ProfilingSample(cmd, k_PerObjectBloomTag))
         {
-
             cmd.GetTemporaryRT(m_PerObjectRenderTextureHandle.id, m_baseDescriptor);
             SetRenderTarget(
                 cmd,

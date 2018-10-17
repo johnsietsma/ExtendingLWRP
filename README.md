@@ -1,4 +1,4 @@
-Tested in Unity 2018.3.0b3.
+Tested in Unity 2018.3.0b3 and LWRP 4.0.1.
 
 # Extending LWRP
 Examples for extending the LWRP

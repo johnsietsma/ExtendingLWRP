@@ -54,7 +54,7 @@ MonoBehaviour:
     value: 1
   bloomThreshold:
     overrideState: 1
-    value: 0.213
+    value: 0.237
   bloomAmount:
     overrideState: 1
-    value: 3.19
+    value: 1.82

@@ -5,7 +5,7 @@ using UnityEngine;
 // A small helper to set the correct render layer for bloom targets
 [RequireComponent(typeof(Renderer))]
 [ExecuteInEditMode()]
-public class PerObjectBlurTarget : MonoBehaviour
+public class PerObjectBloomTarget : MonoBehaviour
 {
     void Start()
     {

@@ -5,7 +5,7 @@ using UnityEngine.Experimental.Rendering.LightweightPipeline;
 using UnityEngine.Rendering;
 
 
-public class GrabBlurPass : MonoBehaviour, IAfterSkyboxPass
+public class GrabBlurPass : MonoBehaviour, IAfterOpaquePass
 {
     private GrabBlurPassImpl m_grabBlurPass;
 
@@ -44,11 +44,14 @@ public class GrabBlurPassImpl : ScriptableRenderPass
         {
             // copy screen into temporary RT
             int screenCopyID = Shader.PropertyToID("_ScreenCopyTexture");
-            RenderTextureDescriptor opaqueDesc = ScriptableRenderer.CreateRenderTextureDescriptor(ref renderingData.cameraData);
+            RenderTextureDescriptor opaqueDesc = 
+                ScriptableRenderer.CreateRenderTextureDescriptor(ref renderingData.cameraData);
             cmd.GetTemporaryRT(screenCopyID, opaqueDesc, FilterMode.Bilinear);
             cmd.Blit(m_ColorHandle.Identifier(), screenCopyID);
 
             // get two smaller RTs
+            opaqueDesc.width /= 2;
+            opaqueDesc.height /= 2;
             cmd.GetTemporaryRT(m_BlurTemp1, opaqueDesc, FilterMode.Bilinear);
             cmd.GetTemporaryRT(m_BlurTemp2, opaqueDesc, FilterMode.Bilinear);
 
