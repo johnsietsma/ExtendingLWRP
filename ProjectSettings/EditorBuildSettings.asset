@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/BlurryRefraction/BlurryRefraction.unity
+    path: Assets/Distortion/Distortion.unity
     guid: b84b1ee368ffe4a80aa810cfab286a4c
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
