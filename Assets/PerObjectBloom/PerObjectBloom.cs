@@ -1,8 +1,8 @@
 ﻿using System;
 using UnityEngine;
-using CoreUtils = UnityEngine.Experimental.Rendering.CoreUtils;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.PostProcessing;
+using FloatParameter = UnityEngine.Rendering.PostProcessing.FloatParameter;
 
 [Serializable]
 [PostProcess(typeof(PerObjectBloomRenderer), PostProcessEvent.AfterStack, "Custom/PerObjectBloom")]
