@@ -1,18 +1,23 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
-using UnityEngine.Experimental.Rendering.LightweightPipeline;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.LWRP;
 
 
-public class GrabBlurPass : MonoBehaviour, IAfterOpaquePass
+public class GrabBlurPass : ScriptableRendererFeature
 {
     private GrabBlurPassImpl m_grabBlurPass;
 
-    public ScriptableRenderPass GetPassToEnqueue(RenderTextureDescriptor baseDescriptor, RenderTargetHandle colorHandle, RenderTargetHandle depthHandle)
+    public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        if (m_grabBlurPass == null) m_grabBlurPass = new GrabBlurPassImpl(colorHandle);
-        return m_grabBlurPass;
+        m_grabBlurPass.Setup(renderer.cameraColorTarget);
+        renderer.EnqueuePass(m_grabBlurPass);
+    }
+
+    public override void Create()
+    {
+        m_grabBlurPass = new GrabBlurPassImpl(RenderTargetHandle.CameraTarget);
+        m_grabBlurPass.renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
     }
 }
 
@@ -22,51 +27,56 @@ public class GrabBlurPassImpl : ScriptableRenderPass
     const string k_RenderGrabPassTag = "BlurredGrabPass";
 
     public Shader m_BlurShader;
-    private RenderTargetHandle m_ColorHandle;
-    private CommandBufferBlur m_Blur;
-    int m_BlurTemp1;
-    int m_BlurTemp2;
+    public RenderTargetIdentifier m_ColorSource;
+   
+    RenderTargetHandle m_BlurTemp1;
+    RenderTargetHandle m_BlurTemp2;
+    RenderTargetHandle m_ScreenCopyId;
+    CommandBufferBlur m_Blur;
 
     public GrabBlurPassImpl(RenderTargetHandle colorHandle)
     {
-        m_ColorHandle = colorHandle;
         m_Blur = new CommandBufferBlur();
-
-        m_BlurTemp1 = Shader.PropertyToID("_Temp1");
-        m_BlurTemp2 = Shader.PropertyToID("_Temp2");
+        m_BlurTemp1.Init("_Temp1");
+        m_BlurTemp2 .Init("_Temp2");
+        m_ScreenCopyId.Init("_ScreenCopyTexture");
     }
 
-    public override void Execute(ScriptableRenderer renderer, ScriptableRenderContext context, ref RenderingData renderingData)
+    public void Setup(RenderTargetIdentifier colorSource)
+    {
+        m_ColorSource = colorSource;
+    }
+
+    public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+    {
+        // get two smaller RTs
+        RenderTextureDescriptor opaqueDesc = cameraTextureDescriptor;
+        opaqueDesc.width /= 2;
+        opaqueDesc.height /= 2;
+        cmd.GetTemporaryRT(m_ScreenCopyId.id, opaqueDesc, FilterMode.Bilinear);
+        cmd.GetTemporaryRT(m_BlurTemp1.id, opaqueDesc, FilterMode.Bilinear);
+        cmd.GetTemporaryRT(m_BlurTemp2.id, opaqueDesc, FilterMode.Bilinear);
+
+        //ConfigureTarget(m_ColorHandle.Identifier());
+    }
+
+    public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         CommandBuffer cmd = CommandBufferPool.Get(k_RenderGrabPassTag);
 
         using (new ProfilingSample(cmd, k_RenderGrabPassTag))
         {
             // copy screen into temporary RT
-            int screenCopyID = Shader.PropertyToID("_ScreenCopyTexture");
-            RenderTextureDescriptor opaqueDesc = 
-                ScriptableRenderer.CreateRenderTextureDescriptor(ref renderingData.cameraData);
-            cmd.GetTemporaryRT(screenCopyID, opaqueDesc, FilterMode.Bilinear);
-            cmd.Blit(m_ColorHandle.Identifier(), screenCopyID);
+            Blit(cmd, m_ColorSource, m_ScreenCopyId.Identifier());
 
-            // get two smaller RTs
-            opaqueDesc.width /= 2;
-            opaqueDesc.height /= 2;
-            cmd.GetTemporaryRT(m_BlurTemp1, opaqueDesc, FilterMode.Bilinear);
-            cmd.GetTemporaryRT(m_BlurTemp2, opaqueDesc, FilterMode.Bilinear);
-
-            // downsample screen copy into smaller RT, release screen RT
-            cmd.Blit(screenCopyID, m_BlurTemp1);
-            cmd.ReleaseTemporaryRT(screenCopyID);
-
-            opaqueDesc.width /= 2;
-            opaqueDesc.height /= 2;
+            // downsample screen copy into smaller RTs
+            Blit(cmd, m_ScreenCopyId.Identifier(), m_BlurTemp1.Identifier());
 
             // Setup blur commands
-            m_Blur.SetupCommandBuffer(cmd, m_BlurTemp1, m_BlurTemp2);
+            m_Blur.SetupCommandBuffer(cmd, m_BlurTemp1.id, m_BlurTemp2.id);
 
             // Set texture id so we can use it later
-            cmd.SetGlobalTexture("_GrabBlurTexture", m_BlurTemp1);
+            cmd.SetGlobalTexture("_GrabBlurTexture", m_BlurTemp1.id);
         }
 
         context.ExecuteCommandBuffer(cmd);
@@ -78,7 +88,8 @@ public class GrabBlurPassImpl : ScriptableRenderPass
         if (cmd == null)
             throw new ArgumentNullException("cmd");
 
-        cmd.ReleaseTemporaryRT(m_BlurTemp1);
-        cmd.ReleaseTemporaryRT(m_BlurTemp2);
+        cmd.ReleaseTemporaryRT(m_BlurTemp1.id);
+        cmd.ReleaseTemporaryRT(m_BlurTemp2.id);
+        cmd.ReleaseTemporaryRT(m_ScreenCopyId.id);
     }
 }

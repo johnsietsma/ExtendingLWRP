@@ -1,20 +1,24 @@
 ﻿using UnityEngine;
-using UnityEngine.Experimental.Rendering;
-using UnityEngine.Experimental.Rendering.LightweightPipeline;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.LWRP;
 
 
 // This class sets up the bloom pass
-public class PerObjectBloomPass : MonoBehaviour, IAfterOpaquePass
+public class PerObjectBloomPass : ScriptableRendererFeature
 {
     public const int k_PerObjectBlurRenderLayerIndex = 5;
 
     private PerObjectBloomPassImpl m_perObjectPass;
 
-    public ScriptableRenderPass GetPassToEnqueue(RenderTextureDescriptor baseDescriptor, RenderTargetHandle colorAttachmentHandle, RenderTargetHandle depthAttachmentHandle)
+    public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        if (m_perObjectPass == null) m_perObjectPass = new PerObjectBloomPassImpl(baseDescriptor);
-        return m_perObjectPass;
+        renderer.EnqueuePass(m_perObjectPass);
+    }
+
+    public override void Create()
+    {
+        m_perObjectPass = new PerObjectBloomPassImpl();
+        m_perObjectPass.renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
     }
 }
 
@@ -24,51 +28,38 @@ public class PerObjectBloomPassImpl : ScriptableRenderPass
 {
     private const string k_PerObjectBloomTag = "Per Object Bloom";
 
-    private Material m_brightnessMaskMaterial;
+    static readonly string kStencilWriteShaderName = "Hidden/Internal-StencilWrite";
+    static readonly ShaderTagId kLightweightForwardShaderId = new ShaderTagId("LightweightForward");
 
-    private RenderTextureDescriptor m_baseDescriptor;
-    private RenderTargetHandle m_PerObjectRenderTextureHandle;
-    private FilterRenderersSettings m_PerObjectFilterSettings;
+    RenderTargetHandle m_PerObjectRenderTextureHandle;
+    FilteringSettings m_PerObjectFilterSettings;
+    Material m_BrightnessMaskMaterial;
 
-    public PerObjectBloomPassImpl(RenderTextureDescriptor baseDescriptor)
+    public PerObjectBloomPassImpl()
     {
-        // All shaders with this lightmode will be in this pass
-        RegisterShaderPassName("LightweightForward");
-
-        m_baseDescriptor = baseDescriptor;
-
-        // This just writes black values for anything that is rendered
-        m_brightnessMaskMaterial = CoreUtils.CreateEngineMaterial("Hidden/Internal-StencilWrite");
-
         // Setup a target RT handle (it just wraps the int id)
-        m_PerObjectRenderTextureHandle = new RenderTargetHandle();
         m_PerObjectRenderTextureHandle.Init(k_PerObjectBloomTag);
 
-        m_PerObjectFilterSettings = new FilterRenderersSettings(true)
-        {
-            // Render all opaque objects
-            renderQueueRange = RenderQueueRange.opaque,
-            // Filter further by any renderer tagged as per-object blur
-            renderingLayerMask = 1<<PerObjectBloomPass.k_PerObjectBlurRenderLayerIndex
-        };
+        m_PerObjectFilterSettings = new FilteringSettings(RenderQueueRange.opaque, -1, 1 << PerObjectBloomPass.k_PerObjectBlurRenderLayerIndex);
+
+        // This just writes black values for anything that is rendered
+        m_BrightnessMaskMaterial = CoreUtils.CreateEngineMaterial(kStencilWriteShaderName);
     }
 
-    public override void Execute(ScriptableRenderer renderer, ScriptableRenderContext context, ref RenderingData renderingData)
+    public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+    {
+        cmd.GetTemporaryRT(m_PerObjectRenderTextureHandle.id, cameraTextureDescriptor);
+
+        ConfigureTarget(m_PerObjectRenderTextureHandle.Identifier());
+        ConfigureClear(ClearFlag.All, Color.white);
+    }
+
+    public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         CommandBuffer cmd = CommandBufferPool.Get(k_PerObjectBloomTag);
+
         using (new ProfilingSample(cmd, k_PerObjectBloomTag))
         {
-            cmd.GetTemporaryRT(m_PerObjectRenderTextureHandle.id, m_baseDescriptor);
-            SetRenderTarget(
-                cmd,
-                m_PerObjectRenderTextureHandle.Identifier(),
-                RenderBufferLoadAction.DontCare,
-                RenderBufferStoreAction.DontCare,
-                ClearFlag.All,
-                Color.white, // Clear to white, the stencil writes black values
-                m_baseDescriptor.dimension // Create a buffer the same size as the color buffer
-                );
-
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
 
@@ -78,13 +69,9 @@ public class PerObjectBloomPassImpl : ScriptableRenderPass
             var sortFlags = renderingData.cameraData.defaultOpaqueSortFlags;
 
             // Setup render data from camera
-            var drawSettings = CreateDrawRendererSettings(camera, sortFlags, RendererConfiguration.None, 
-                renderingData.supportsDynamicBatching);
-
-            // Everything gets drawn with the stencil shader
-            drawSettings.SetOverrideMaterial(m_brightnessMaskMaterial, 0);
-
-            context.DrawRenderers(renderingData.cullResults.visibleRenderers, ref drawSettings, m_PerObjectFilterSettings);
+            var drawSettings = CreateDrawingSettings(kLightweightForwardShaderId, ref renderingData, sortFlags);
+            drawSettings.overrideMaterial = m_BrightnessMaskMaterial;
+            context.DrawRenderers(renderingData.cullResults, ref drawSettings, ref m_PerObjectFilterSettings);
 
             // Set a global texture id so we can access this later on
             cmd.SetGlobalTexture("_PerObjectBloomMask", m_PerObjectRenderTextureHandle.id);

@@ -47,13 +47,16 @@
 			TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
 			TEXTURE2D(_BumpMap); SAMPLER(sampler_BumpMap);
 
+
 			sampler2D _GrabBlurTexture;
 			float4 _GrabBlurTexture_TexelSize;
 
+			CBUFFER_START(UnityPerMaterial)
 			float _BumpAmt;
 			half _TintAmt;
 			float4 _BumpMap_ST;
 			float4 _MainTex_ST;
+			CBUFFER_END
 
 
 			Varyings vert(Attributes input)
