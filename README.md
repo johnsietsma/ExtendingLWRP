@@ -21,6 +21,6 @@ Assign the PerObjectBloom Renderer as a custom renderer in the Settings\Extendin
 
 
 
-OUT OF DATE: Notes on extending the LRWP in general can be found in the wiki of these repo.
+~~Notes on extending the LRWP in general can be found in the wiki of these repo (OUT OF DATE).~~
 
 ![Blurry Refractions](media/ExtendingLWRP.PNG)
